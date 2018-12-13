@@ -37,7 +37,6 @@ for x in result_info:
 html_data = """
 <!DOCTYPE HTML>
 <html>
-
 <style>
   table{
     margin: 50px 0;
@@ -64,7 +63,6 @@ html_data = """
     color: #547901;
   }
 </style>
-
 <body>
 <table>
 <tr>
