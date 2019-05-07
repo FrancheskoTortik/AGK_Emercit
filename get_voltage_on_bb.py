@@ -1,22 +1,23 @@
 #Данная программа предназначена для получения последнего имеющегося значения напряжения и его даи и времени
 import re
 import requests
-
+from datetime import datetime as dt
+from datetime import timedelta
 def voltage_get (bb):
     #делаем запрос лога
     agk = requests.get('http://emercit.com/tech3/log.php?bb=' + str(bb))
-    voltage = '--.--'
+    last_voltage = '--.--'
     #проходим циклом по всем строкам полученного лога
-    for i in agk.text.split('geo'):
-        #print(i)
-        #выбираем только строки, содержащие значение напряжения
-        voltage_level_str = re.findall(r'volt', i)
-        if voltage_level_str != []:
+    temp_info = re.findall(r'time\(\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:\d\d\) volt\(main=\d\d\.\d\d;rl=\d\d\.\d\d\)', agk.text)
+    last_time = dt.strptime(r'01.01.2019 00:00:00', r'%d.%m.%Y %H:%M:%S')
+    for x in temp_info:
+        date_tmp = dt.strptime(re.findall(r'\d\d\.\d\d\.\d\d\d\d', x)[0] + " " + re.findall(r'\d\d:\d\d:\d\d', x)[0], r'%d.%m.%Y %H:%M:%S')
+        if date_tmp > last_time:
+            last_time = date_tmp
+            last_voltage = re.findall(r'\d\d\.\d\d', re.findall(r'main=\d\d\.\d\d', re.findall(r'volt\(main=\d\d\.\d\d;rl=\d\d\.\d\d', x)[0])[0])[0]
 
-            volt = re.findall(r'main=\d+\.\d+', i)
-            volt_tmp = volt[0].split('=')[1]
-            voltage = str(volt_tmp)
-    return voltage
+
+    return last_voltage
 
 def date_voltage(bb):
     #делаем запрос лога
@@ -24,14 +25,14 @@ def date_voltage(bb):
     date = 'no_data'
     time_volt = 'no_data'
     #проходим циклом по всем строкам полученного лога
-    for i in agk.text.split('geo'):
+    temp_info = re.findall(r'time\(\d\d\.\d\d\.\d\d\d\d \d\d:\d\d:\d\d\) volt\(main=\d\d\.\d\d;rl=\d\d\.\d\d\)',
+                           agk.text)
+    last_time = dt.strptime(r'01.01.2019 00:00:00', r'%d.%m.%Y %H:%M:%S')
+    for x in temp_info:
+        date_tmp = dt.strptime(re.findall(r'\d\d\.\d\d\.\d\d\d\d', x)[0] + " " + re.findall(r'\d\d:\d\d:\d\d', x)[0],
+                               r'%d.%m.%Y %H:%M:%S')
+        if date_tmp > last_time:
+            last_time = date_tmp
+    last_time += timedelta(hours=3)
+    return last_time
 
-        #выбираем только строки, содержащие значение напряжения
-        voltage_level_str = re.findall(r'volt', i)
-        if voltage_level_str != []:
-
-            date_tmp = re.findall(r'time\(\d\d\.\d\d\.\d\d\d\d\s\d\d:\d\d:\d\d', i)
-            date_tmp2 = date_tmp[0].split('(')
-            date = date_tmp2[1].split()[0]
-            time_volt = date_tmp2[1].split()[1]# date_voltage(bb)[0] - дата измерения, date_voltage(bb)[1] - время измерения
-    return date, time_volt
